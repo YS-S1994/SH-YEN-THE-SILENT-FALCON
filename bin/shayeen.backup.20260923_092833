@@ -1,23 +1,7 @@
 #!/usr/bin/env bash
 
-SOURCE="${BASH_SOURCE[0]}"
-
-while [ -h "$SOURCE" ]; do
-    DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
-    LINK="$(readlink "$SOURCE")"
-
-    case "$LINK" in
-        /*)
-            SOURCE="$LINK"
-            ;;
-        *)
-            SOURCE="$DIR/$LINK"
-            ;;
-    esac
-done
-
-SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
-BASE_DIR="$(cd "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 source "$BASE_DIR/core/config.sh"
 source "$BASE_DIR/core/ui.sh"

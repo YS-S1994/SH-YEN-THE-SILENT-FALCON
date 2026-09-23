@@ -1,23 +1,12 @@
 #!/usr/bin/env bash
+set -e
 
-SOURCE="${BASH_SOURCE[0]}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-while [ -h "$SOURCE" ]; do
-    DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
-    LINK="$(readlink "$SOURCE")"
+cat > "$ROOT/bin/shayeen" <<'EOF'
+#!/usr/bin/env bash
 
-    case "$LINK" in
-        /*)
-            SOURCE="$LINK"
-            ;;
-        *)
-            SOURCE="$DIR/$LINK"
-            ;;
-    esac
-done
-
-SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
-BASE_DIR="$(cd "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd)"
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 source "$BASE_DIR/core/config.sh"
 source "$BASE_DIR/core/ui.sh"
@@ -500,3 +489,8 @@ HELP
 esac
 
 shayeen_log "$*"
+EOF
+
+chmod +x "$ROOT/bin/shayeen"
+
+echo "ENGINE CREATED."

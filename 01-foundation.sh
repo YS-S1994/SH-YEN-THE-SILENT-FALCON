@@ -1,4 +1,61 @@
 #!/usr/bin/env bash
+set -e
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+mkdir -p \
+  "$ROOT/bin" \
+  "$ROOT/core" \
+  "$ROOT/modules"/{network,security,system,crypto,download,files,search,monitor,developer,build,storage,utilities,settings} \
+  "$ROOT/assets/logo" \
+  "$ROOT/assets/reference" \
+  "$ROOT/config" \
+  "$ROOT/data" \
+  "$ROOT/logs" \
+  "$ROOT/tests" \
+  "$ROOT/docs"
+
+printf '%s\n' '1.0.0' > "$ROOT/VERSION"
+
+cat > "$ROOT/core/config.sh" <<'EOF'
+#!/usr/bin/env bash
+
+SHAYEN_VERSION="1.0.0"
+SHAYEN_NAME="SHΛYEN"
+SHAYEN_PRONUNCIATION="SHAY-EN"
+SHAYEN_ABBR="SYN"
+SHAYEN_SIGNATURE="SΛYEN."
+SHAYEN_TITLE="THE SILENT SOVEREIGN"
+SHAYEN_SYMBOL="Λ"
+SHAYEN_NUMBER="94"
+SHAYEN_PROMPT="⟦SN-🜏⟧"
+SHAYEN_MOTTO="KNOW • BUILD • PROTECT"
+SHAYEN_PLATFORM="Termux / Android"
+
+SHAYEN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SHAYEN_CONFIG_DIR="$SHAYEN_ROOT/config"
+SHAYEN_DATA_DIR="$SHAYEN_ROOT/data"
+SHAYEN_LOG_DIR="$SHAYEN_ROOT/logs"
+
+export SHAYEN_VERSION
+export SHAYEN_NAME
+export SHAYEN_PRONUNCIATION
+export SHAYEN_ABBR
+export SHAYEN_SIGNATURE
+export SHAYEN_TITLE
+export SHAYEN_SYMBOL
+export SHAYEN_NUMBER
+export SHAYEN_PROMPT
+export SHAYEN_MOTTO
+export SHAYEN_PLATFORM
+export SHAYEN_ROOT
+export SHAYEN_CONFIG_DIR
+export SHAYEN_DATA_DIR
+export SHAYEN_LOG_DIR
+EOF
+
+cat > "$ROOT/core/ui.sh" <<'EOF'
+#!/usr/bin/env bash
 
 ESC=$'\033'
 
@@ -95,3 +152,60 @@ header() {
     printf '\n'
     printf '%s%s%s ~/shaheen $ %s\n' "$BRIGHT_MAGENTA" "⟦SN-🜏⟧" "$BRIGHT_WHITE" "$RESET"
 }
+EOF
+
+cat > "$ROOT/core/environment.sh" <<'EOF'
+#!/usr/bin/env bash
+
+detect_environment() {
+    if [ -n "${TERMUX_VERSION:-}" ] || [ -d "/data/data/com.termux" ]; then
+        printf '%s\n' "TERMUX"
+        return
+    fi
+
+    if [ -r /etc/os-release ]; then
+        . /etc/os-release
+        case "${ID:-}" in
+            kali) printf '%s\n' "KALI"; return ;;
+            debian) printf '%s\n' "DEBIAN"; return ;;
+            ubuntu) printf '%s\n' "UBUNTU"; return ;;
+            alpine) printf '%s\n' "ALPINE"; return ;;
+        esac
+    fi
+
+    printf '%s\n' "LINUX"
+}
+
+environment_name() {
+    case "$(detect_environment)" in
+        TERMUX) echo "Termux / Android" ;;
+        KALI) echo "Kali Linux" ;;
+        DEBIAN) echo "Debian Linux" ;;
+        UBUNTU) echo "Ubuntu Linux" ;;
+        ALPINE) echo "Alpine Linux" ;;
+        *) echo "Linux" ;;
+    esac
+}
+EOF
+
+cat > "$ROOT/core/logger.sh" <<'EOF'
+#!/usr/bin/env bash
+
+shayeen_log() {
+    mkdir -p "$SHAYEN_LOG_DIR"
+    printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" \
+        >> "$SHAYEN_LOG_DIR/shayeen.log"
+}
+EOF
+
+chmod +x "$ROOT"/core/*.sh
+
+echo
+echo "============================================================"
+echo " SHΛYEN FOUNDATION READY"
+echo " THE SILENT SOVEREIGN"
+echo "============================================================"
+echo
+echo "Version : 1.0.0"
+echo "Prompt  : ⟦SN-🜏⟧ ~/shaheen \$"
+echo

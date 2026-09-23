@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+files_search() {
+    local pattern="$1"
+    local path="${2:-$HOME}"
+
+    [ -n "$pattern" ] || return 1
+    find "$path" -iname "*$pattern*" 2>/dev/null | head -300
+}
+
+files_copy() {
+    cp -a -- "$1" "$2"
+}
+
+files_move() {
+    mv -- "$1" "$2"
+}
+
+files_rename() {
+    mv -- "$1" "$2"
+}
+
+files_delete() {
+    local target="$1"
+
+    [ -n "$target" ] || return 1
+
+    printf 'Delete "%s"? [y/N] ' "$target"
+    read -r answer
+
+    case "$answer" in
+        y|Y|yes|YES) rm -rf -- "$target" ;;
+        *) warn "Deletion cancelled." ;;
+    esac
+}
+
+files_compress() {
+    local source="$1"
+    local output="${2:-archive.tar.gz}"
+
+    tar -czf "$output" "$source"
+    ok "Created: $output"
+}
+
+files_extract() {
+    download_extract "$1" "${2:-.}"
+}
+
+files_checksum() {
+    sha256sum "$1"
+}
+
+files_permissions() {
+    local target="$1"
+    stat "$target" 2>/dev/null || ls -ld "$target"
+}

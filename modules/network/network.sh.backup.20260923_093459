@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+network_interfaces() {
+    title "NETWORK / INTERFACES"
+    if command -v ip >/dev/null 2>&1; then
+        ip -brief addr 2>/dev/null || ip addr
+    else
+        warn "ip command is not installed."
+    fi
+}
+
+network_routes() {
+    title "NETWORK / ROUTES"
+    if command -v ip >/dev/null 2>&1; then
+        ip route 2>/dev/null || true
+    else
+        warn "ip command is not installed."
+    fi
+}
+
+network_dns() {
+    title "NETWORK / DNS"
+    printf 'Resolver configuration:\n'
+    if [ -f /etc/resolv.conf ]; then
+        cat /etc/resolv.conf
+    else
+        warn "/etc/resolv.conf unavailable."
+    fi
+}
+
+network_connectivity() {
+    title "NETWORK / CONNECTIVITY"
+    if command -v curl >/dev/null 2>&1; then
+        if curl -fsS --max-time 7 https://example.com >/dev/null; then
+            ok "Internet connectivity: reachable"
+        else
+            warn "Internet connectivity: unavailable"
+            return 1
+        fi
+    else
+        warn "curl is not installed."
+    fi
+}
+
+network_public_ip() {
+    title "NETWORK / PUBLIC IP"
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsS --max-time 7 https://api.ipify.org || warn "Unable to determine public IP."
+        printf '\n'
+    else
+        warn "curl is not installed."
+    fi
+}
+
+network_ports() {
+    title "NETWORK / LOCAL PORTS"
+
+    if command -v ss >/dev/null 2>&1; then
+        ss -lntup 2>/dev/null || ss -lntu
+    elif command -v netstat >/dev/null 2>&1; then
+        netstat -lntup 2>/dev/null || netstat -lntu
+    else
+        warn "Install iproute2 or net-tools for local port inspection."
+    fi
+}
+
+network_diagnostics() {
+    title "NETWORK / DIAGNOSTICS"
+    network_interfaces
+    network_routes
+    network_dns
+    network_connectivity
+}

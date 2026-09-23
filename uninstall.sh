@@ -1,5 +1,9 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/env bash
 
-rm -f "$PREFIX/bin/shayeen"
+TARGET="${PREFIX:-$HOME/.local}/bin"
 
-echo "SHΛHEEN Toolkit has been removed."
+rm -f "$TARGET/shayeen"
+rm -f "$TARGET/shaheen"
+rm -f "$TARGET/sn"
+
+echo "SHΛYEN command links removed."

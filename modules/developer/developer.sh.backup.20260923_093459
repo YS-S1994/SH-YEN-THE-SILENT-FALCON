@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+dev_detect() {
+    title "DEVELOPER / PROJECT DETECTION"
+
+    local found=0
+
+    [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ] || \
+    [ -d "app/src" ] && {
+        ok "Android"
+        found=1
+    }
+
+    [ -f "pyproject.toml" ] || [ -f "requirements.txt" ] || [ -f "setup.py" ] && {
+        ok "Python"
+        found=1
+    }
+
+    [ -f "package.json" ] && {
+        ok "Node.js"
+        found=1
+    }
+
+    [ -f "go.mod" ] && {
+        ok "Go"
+        found=1
+    }
+
+    [ -f "Cargo.toml" ] && {
+        ok "Rust"
+        found=1
+    }
+
+    find . -maxdepth 2 -type f \
+        \( -name 'CMakeLists.txt' -o -name 'Makefile' -o -name '*.c' -o -name '*.cpp' -o -name '*.h' \) \
+        2>/dev/null | grep . >/dev/null && {
+            ok "C/C++"
+            found=1
+        }
+
+    find . -maxdepth 2 -type f -name '*.java' 2>/dev/null | grep . >/dev/null && {
+        ok "Java"
+        found=1
+    }
+
+    [ "$found" -eq 0 ] && warn "No recognized project type detected."
+}
+
+dev_python() {
+    command -v python3 >/dev/null 2>&1 && python3 --version ||
+    command -v python >/dev/null 2>&1 && python --version ||
+    warn "Python not installed."
+}
+
+dev_node() {
+    command -v node >/dev/null 2>&1 && node --version || warn "Node.js not installed."
+}
+
+dev_go() {
+    command -v go >/dev/null 2>&1 && go version || warn "Go not installed."
+}
+
+dev_rust() {
+    command -v rustc >/dev/null 2>&1 && rustc --version || warn "Rust not installed."
+}
+
+dev_java() {
+    command -v java >/dev/null 2>&1 && java -version 2>&1 | head -2 || warn "Java not installed."
+}
+
+dev_git() {
+    command -v git >/dev/null 2>&1 && git --version || warn "Git not installed."
+}
+
+dev_environment() {
+    printf 'Environment : %s\n' "$(environment_name)"
+    printf 'Directory   : %s\n' "$PWD"
+    printf 'Git         : '; dev_git
+}

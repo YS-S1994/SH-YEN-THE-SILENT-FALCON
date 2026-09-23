@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+
+network_interfaces() {
+    title "NETWORK / INTERFACES"
+
+    if command -v ip >/dev/null 2>&1; then
+        local output
+        output="$(ip -brief addr 2>&1 || true)"
+
+        if printf '%s\n' "$output" | grep -qiE 'permission denied|cannot bind|operation not permitted'; then
+            warn "Interface information is restricted by Android/SELinux."
+            if command -v ifconfig >/dev/null 2>&1; then
+                ifconfig 2>/dev/null || true
+            fi
+        elif [ -n "$output" ]; then
+            printf '%s\n' "$output"
+        else
+            warn "No interface information available."
+        fi
+
+    elif command -v ifconfig >/dev/null 2>&1; then
+        ifconfig 2>/dev/null || warn "Interface information unavailable."
+
+    else
+        warn "Neither ip nor ifconfig is available."
+    fi
+}
+
+network_routes() {
+    title "NETWORK / ROUTES"
+
+    if command -v ip >/dev/null 2>&1; then
+        local output
+        output="$(ip route 2>&1 || true)"
+
+        if printf '%s\n' "$output" | grep -qiE 'permission denied|cannot bind|operation not permitted'; then
+            warn "Route information is restricted by Android/SELinux."
+        elif [ -n "$output" ]; then
+            printf '%s\n' "$output"
+        else
+            warn "No route information available."
+        fi
+
+    elif command -v route >/dev/null 2>&1; then
+        route -n 2>/dev/null || warn "Route information unavailable."
+
+    else
+        warn "No route inspection utility is available."
+    fi
+}
+
+network_dns() {
+    title "NETWORK / DNS"
+
+    printf 'Resolver configuration:\n'
+
+    if [ -f /etc/resolv.conf ]; then
+        cat /etc/resolv.conf
+        return
+    fi
+
+    # Android/Termux may not expose /etc/resolv.conf.
+    if command -v getprop >/dev/null 2>&1; then
+        local dns_found=0
+
+        for prop in \
+            net.dns1 \
+            net.dns2 \
+            net.dns3 \
+            net.dns4 \
+            net.rmnet0.dns1 \
+            net.rmnet0.dns2 \
+            net.wlan0.dns1 \
+            net.wlan0.dns2
+        do
+            local value
+            value="$(getprop "$prop" 2>/dev/null || true)"
+
+            if [ -n "$value" ]; then
+                printf '%-24s : %s\n' "$prop" "$value"
+                dns_found=1
+            fi
+        done
+
+        if [ "$dns_found" -eq 1 ]; then
+            return
+        fi
+    fi
+
+    # Termux resolver fallback.
+    if command -v nslookup >/dev/null 2>&1; then
+        printf 'Resolver test:\n'
+        nslookup example.com 2>/dev/null | head -20 || true
+        return
+    fi
+
+    warn "DNS configuration is not directly exposed by this Android environment."
+}
+
+network_connectivity() {
+    title "NETWORK / CONNECTIVITY"
+
+    if command -v curl >/dev/null 2>&1; then
+        if curl -fsS --max-time 7 https://example.com >/dev/null 2>&1; then
+            ok "Internet connectivity: reachable"
+        else
+            warn "Internet connectivity: unavailable"
+            return 1
+        fi
+
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q --timeout=7 --spider https://example.com\; then
+            ok "Internet connectivity: reachable"
+        else
+            warn "Internet connectivity: unavailable"
+            return 1
+        fi
+
+    else
+        warn "curl/wget is not installed."
+    fi
+}
+
+network_public_ip() {
+    title "NETWORK / PUBLIC IP"
+
+    if command -v curl >/dev/null 2>&1; then
+        local ip
+
+        ip="$(curl -fsS --max-time 7 https://api.ipify.org 2>/dev/null || true)"
+
+        if [ -n "$ip" ]; then
+            printf 'Public IP : %s\n' "$ip"
+        else
+            warn "Unable to determine public IP."
+        fi
+
+    else
+        warn "curl is not installed."
+    fi
+}
+
+network_ports() {
+    title "NETWORK / LOCAL PORTS"
+
+    if command -v ss >/dev/null 2>&1; then
+        local output
+        output="$(ss -lntup 2>&1 || ss -lntu 2>&1 || true)"
+
+        if printf '%s\n' "$output" | grep -qiE 'permission denied|operation not permitted'; then
+            warn "Process/socket details are restricted by Android."
+            ss -lntu 2>/dev/null || true
+        elif [ -n "$output" ]; then
+            printf '%s\n' "$output"
+        else
+            warn "No listening sockets detected."
+        fi
+
+    elif command -v netstat >/dev/null 2>&1; then
+        netstat -lntu 2>/dev/null || warn "Port information unavailable."
+
+    else
+        warn "Install iproute2 or net-tools for local port inspection."
+    fi
+}
+
+network_diagnostics() {
+    title "NETWORK / DIAGNOSTICS"
+
+    network_interfaces
+    network_routes
+    network_dns
+    network_connectivity
+}
