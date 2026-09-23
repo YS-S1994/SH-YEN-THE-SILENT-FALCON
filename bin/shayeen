@@ -1,0 +1,74 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+source "$BASE_DIR/core/config.sh"
+source "$BASE_DIR/core/ui.sh"
+
+source "$BASE_DIR/modules/system/system.sh"
+source "$BASE_DIR/modules/crypto/crypto.sh"
+source "$BASE_DIR/modules/download/download.sh"
+source "$BASE_DIR/modules/files/files.sh"
+
+case "$1" in
+
+    system)
+        system_info
+        ;;
+
+    crypto)
+        case "$2" in
+            hash)
+                crypto_hash "$3"
+                ;;
+            *)
+                echo "Usage: shayeen crypto hash <file>"
+                ;;
+        esac
+        ;;
+
+    download)
+        download_file "$2"
+        ;;
+
+    files)
+        case "$2" in
+            info)
+                file_info "$3"
+                ;;
+            *)
+                echo "Usage: shayeen files info <file>"
+                ;;
+        esac
+        ;;
+
+    --version|-v)
+        echo "$SHΛHEEN_NAME $SHΛHEEN_VERSION"
+        ;;
+
+    --help|-h)
+        echo
+        echo "SHΛHEEN TERMUX TOOLKIT"
+        echo
+        echo "Usage:"
+        echo "  shayeen"
+        echo "  shayeen system"
+        echo "  shayeen crypto hash <file>"
+        echo "  shayeen download <URL>"
+        echo "  shayeen files info <file>"
+        echo "  shayeen --version"
+        echo
+        ;;
+
+    "")
+        banner
+        menu
+        ;;
+
+    *)
+        echo "Unknown command: $1"
+        echo "Use: shayeen --help"
+        exit 1
+        ;;
+
+esac
